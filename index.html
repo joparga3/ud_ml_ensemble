@@ -12,7 +12,7 @@
 <meta name="author" content="Jose Parreno Garcia" />
 
 
-<title>Evluating model performance</title>
+<title>Ensemble learning</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -191,7 +191,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Evluating model performance</h1>
+<h1 class="title toc-ignore">Ensemble learning</h1>
 <h4 class="author"><em>Jose Parreno Garcia</em></h4>
 <h4 class="date"><em>February 2018</em></h4>
 
@@ -199,23 +199,18 @@ $(document).ready(function () {
 
 <div id="TOC">
 <ul>
-<li><a href="#cross-validation"><span class="toc-section-number">1</span> Cross-validation</a><ul>
+<li><a href="#bagging-method"><span class="toc-section-number">1</span> Bagging method</a><ul>
 <li><a href="#preparing-the-data"><span class="toc-section-number">1.1</span> Preparing the data</a></li>
-<li><a href="#estimating-model-performance-with-k-fold-cross-validation"><span class="toc-section-number">1.2</span> Estimating model performance with k-fold Cross-Validation</a></li>
-<li><a href="#performing-cros-validation-with-e1071-package"><span class="toc-section-number">1.3</span> Performing Cros-validation with e1071 package</a></li>
-<li><a href="#performing-cros-validation-with-caret-package"><span class="toc-section-number">1.4</span> Performing Cros-validation with caret package</a></li>
+<li><a href="#bagging-in-r---adabag-package"><span class="toc-section-number">1.2</span> Bagging in R - Adabag package</a></li>
+<li><a href="#performing-cross-validation-with-the-bagging-method"><span class="toc-section-number">1.3</span> Performing Cross-Validation with the Bagging Method</a></li>
 </ul></li>
-<li><a href="#variable-importance"><span class="toc-section-number">2</span> Variable importance</a><ul>
-<li><a href="#with-caret-package"><span class="toc-section-number">2.1</span> With Caret package</a></li>
-<li><a href="#with-rminer-package"><span class="toc-section-number">2.2</span> With rminer package</a></li>
+<li><a href="#boosting-method"><span class="toc-section-number">2</span> Boosting method</a></li>
+<li><a href="#boosting-with-adabag-package"><span class="toc-section-number">3</span> Boosting with adabag package</a></li>
+<li><a href="#boosting-with-caret-and-mboost-package"><span class="toc-section-number">4</span> Boosting with caret and mboost package</a><ul>
+<li><a href="#cross-validation-with-boosting-method"><span class="toc-section-number">4.1</span> Cross-Validation with Boosting Method</a></li>
+<li><a href="#classifying-data-with-gradient-boosting"><span class="toc-section-number">4.2</span> Classifying data with gradient boosting</a></li>
 </ul></li>
-<li><a href="#highly-correlated-features"><span class="toc-section-number">3</span> Highly correlated features</a></li>
-<li><a href="#feature-selection"><span class="toc-section-number">4</span> Feature selection</a></li>
-<li><a href="#measuring-performance-of-a-regression-model"><span class="toc-section-number">5</span> Measuring performance of a regression model</a></li>
-<li><a href="#measuring-performance-with-a-confusion-matrix"><span class="toc-section-number">6</span> Measuring performance with a confusion matrix</a></li>
-<li><a href="#measuring-performance-using-rocr"><span class="toc-section-number">7</span> Measuring performance using ROCR</a></li>
-<li><a href="#comparing-roc-curve"><span class="toc-section-number">8</span> Comparing ROC Curve</a></li>
-<li><a href="#measuring-performance-differences-between-models"><span class="toc-section-number">9</span> Measuring performance differences between models</a></li>
+<li><a href="#random-forest"><span class="toc-section-number">5</span> Random Forest</a></li>
 </ul>
 </div>
 
@@ -229,20 +224,21 @@ text-align: justify}
 <p><br></p>
 <p>We will look at:</p>
 <ul>
-<li>Cross-validation</li>
-<li>Variable importance</li>
-<li>Feature correlation</li>
-<li>Feature selection</li>
+<li>Bagging method</li>
+<li>Boosting method</li>
+<li>Mergins of a classifer</li>
+<li>Calculating error evolution of the ensemble method</li>
+<li>Random forest</li>
 </ul>
 <p><br></p>
-<div id="cross-validation" class="section level1">
-<h1><span class="header-section-number">1</span> Cross-validation</h1>
-<p><img src="C:/Users/garciaj/Desktop/Websites/UDEMY_ML/udemy_ensemble/images/1.PNG" /><!-- --></p>
+<div id="bagging-method" class="section level1">
+<h1><span class="header-section-number">1</span> Bagging method</h1>
+<p><img src="images/1.PNG" width="722" /><img src="images/1_1.PNG" width="350" /><img src="images/1_2.PNG" width="523" /></p>
 <div id="preparing-the-data" class="section level2">
 <h2><span class="header-section-number">1.1</span> Preparing the data</h2>
-<pre class="r"><code>library(C50)
-
-data(churn)
+<pre class="r"><code>library(C50)</code></pre>
+<pre><code>## Warning: package &#39;C50&#39; was built under R version 3.4.3</code></pre>
+<pre class="r"><code>data(churn)
 
 str(churnTrain)</code></pre>
 <pre><code>## &#39;data.frame&#39;:    3333 obs. of  20 variables:
@@ -288,891 +284,323 @@ dim(trainset)</code></pre>
    return(list(train = train, test = test))
    }</code></pre>
 </div>
-<div id="estimating-model-performance-with-k-fold-cross-validation" class="section level2">
-<h2><span class="header-section-number">1.2</span> Estimating model performance with k-fold Cross-Validation</h2>
-<pre class="r"><code>library(e1071)</code></pre>
-<pre><code>## Warning: package &#39;e1071&#39; was built under R version 3.4.3</code></pre>
-<pre class="r"><code>ind = cut(1:nrow(churnTrain), breaks=10, labels=F)
+<div id="bagging-in-r---adabag-package" class="section level2">
+<h2><span class="header-section-number">1.2</span> Bagging in R - Adabag package</h2>
+<pre class="r"><code># install.packages(&quot;adabag&quot;)
+library(adabag)</code></pre>
+<pre><code>## Warning: package &#39;adabag&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: rpart</code></pre>
+<pre><code>## Loading required package: caret</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.4.1</code></pre>
+<pre><code>## Loading required package: foreach</code></pre>
+<pre><code>## foreach: simple, scalable parallel programming from Revolution Analytics
+## Use Revolution R for scalability, fault tolerance and more.
+## http://www.revolutionanalytics.com</code></pre>
+<pre><code>## Loading required package: doParallel</code></pre>
+<pre><code>## Warning: package &#39;doParallel&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: iterators</code></pre>
+<pre><code>## Loading required package: parallel</code></pre>
+<pre class="r"><code>set.seed(2)
+churn.bagging = adabag::bagging(churn ~ ., data=trainset, mfinal=10)
 
-accuracies = c()
-for (i in 1:10) {
-  fit = svm(churn ~., churnTrain[ind != i,])
-  predictions = predict(fit, churnTrain[ind == i, !names(churnTrain) %in% c(&quot;churn&quot;)])
-  correct_count = sum(predictions == churnTrain[ind ==i,c(&quot;churn&quot;)])
-  accuracies = append(correct_count / nrow(churnTrain[ind ==i,]), accuracies)
-}
+churn.bagging$importance</code></pre>
+<pre><code>##            international_plan number_customer_service_calls         number_vmail_messages               total_day_calls              total_day_charge             total_day_minutes               total_eve_calls              total_eve_charge 
+##                    10.4948380                    16.4260510                     0.5319143                     0.3774190                     0.0000000                    28.7545042                     0.1463585                     0.0000000 
+##             total_eve_minutes              total_intl_calls             total_intl_charge            total_intl_minutes             total_night_calls            total_night_charge           total_night_minutes               voice_mail_plan 
+##                    14.2366754                     8.7733895                     0.0000000                     9.7838256                     0.4349952                     0.0000000                     2.3379622                     7.7020671</code></pre>
+<pre class="r"><code>churn.predbagging= predict.bagging(churn.bagging,newdata=testset)
 
-accuracies</code></pre>
-<pre><code>##  [1] 0.9341317 0.8948949 0.8978979 0.9459459 0.9219219 0.9281437 0.9219219 0.9249249 0.9189189 0.9251497</code></pre>
-<pre class="r"><code>mean(accuracies)</code></pre>
-<pre><code>## [1] 0.9213852</code></pre>
-<pre class="r"><code>for (i in 1:10) {
-   fit = naiveBayes(churn ~., churnTrain[ind != i,])
-   predictions = predict(fit, churnTrain[ind == i, ! names(churnTrain)
-                                          %in% c(&quot;churn&quot;)])
-   correct_count = sum(predictions == churnTrain[ind == i,c(&quot;churn&quot;)])
-   accuracies = append(correct_count / nrow(churnTrain[ind == i,]),
-                        accuracies)
-}
-
-accuracies</code></pre>
-<pre><code>##  [1] 0.8892216 0.8618619 0.8498498 0.9159159 0.8588589 0.8832335 0.8978979 0.8918919 0.8618619 0.8832335 0.9341317 0.8948949 0.8978979 0.9459459 0.9219219 0.9281437 0.9219219 0.9249249 0.9189189 0.9251497</code></pre>
-<pre class="r"><code>mean(accuracies)</code></pre>
-<pre><code>## [1] 0.9003839</code></pre>
+churn.predbagging$confusion</code></pre>
+<pre><code>##                Observed Class
+## Predicted Class yes  no
+##             no   35 866
+##             yes 106  11</code></pre>
+<pre class="r"><code>churn.predbagging$error</code></pre>
+<pre><code>## [1] 0.04518664</code></pre>
 </div>
-<div id="performing-cros-validation-with-e1071-package" class="section level2">
-<h2><span class="header-section-number">1.3</span> Performing Cros-validation with e1071 package</h2>
-<pre class="r"><code>tuned = tune.svm(churn~., data = trainset, gamma = 10^-2, cost = 10^2,
-                 tuneControl=tune.control(cross=10))
+<div id="performing-cross-validation-with-the-bagging-method" class="section level2">
+<h2><span class="header-section-number">1.3</span> Performing Cross-Validation with the Bagging Method</h2>
+<pre class="r"><code>churn.baggingcv = bagging.cv(churn ~ ., v=10, data=trainset, mfinal=10)
 
-summary(tuned)</code></pre>
-<pre><code>## 
-## Error estimation of &#39;svm&#39; using 10-fold cross validation: 0.0808031</code></pre>
-<pre class="r"><code>tuned$performances</code></pre>
-<pre><code>##   gamma cost     error dispersion
-## 1  0.01  100 0.0808031 0.02367426</code></pre>
-<pre class="r"><code>svmfit = tuned$best.model
-table(trainset[,c(&quot;churn&quot;)], predict(svmfit))</code></pre>
-<pre><code>##      
-##        yes   no
-##   yes  234  108
-##   no    13 1960</code></pre>
-</div>
-<div id="performing-cros-validation-with-caret-package" class="section level2">
-<h2><span class="header-section-number">1.4</span> Performing Cros-validation with caret package</h2>
-<pre class="r"><code>library(e1071)
-library(caret)
-control = trainControl(method=&quot;repeatedcv&quot;, number=10,repeats=3)
-library(caret)
-model = train(churn~., data=trainset, method=&quot;rpart&quot;,
-              preProcess=&quot;scale&quot;, trControl=control)
-
-model</code></pre>
-<pre><code>## CART 
-## 
-## 2315 samples
-##   16 predictor
-##    2 classes: &#39;yes&#39;, &#39;no&#39; 
-## 
-## Pre-processing: scaled (16) 
-## Resampling: Cross-Validated (10 fold, repeated 3 times) 
-## Summary of sample sizes: 2084, 2083, 2084, 2084, 2084, 2082, ... 
-## Resampling results across tuning parameters:
-## 
-##   cp          Accuracy   Kappa    
-##   0.05555556  0.9010890  0.5224011
-##   0.07456140  0.8637855  0.2430835
-##   0.07602339  0.8561525  0.1676674
-## 
-## Accuracy was used to select the optimal model using  the largest value.
-## The final value used for the model was cp = 0.05555556.</code></pre>
+churn.baggingcv$confusion</code></pre>
+<pre><code>##                Observed Class
+## Predicted Class  yes   no
+##             no   120 1947
+##             yes  222   26</code></pre>
+<pre class="r"><code>churn.baggingcv$error</code></pre>
+<pre><code>## [1] 0.06306695</code></pre>
 <p><br></p>
 </div>
 </div>
-<div id="variable-importance" class="section level1">
-<h1><span class="header-section-number">2</span> Variable importance</h1>
-<div id="with-caret-package" class="section level2">
-<h2><span class="header-section-number">2.1</span> With Caret package</h2>
-<pre class="r"><code>importance = varImp(model, scale=FALSE)
-importance</code></pre>
-<pre><code>## rpart variable importance
-## 
-##                               Overall
-## number_customer_service_calls 116.015
-## total_day_minutes             106.988
-## total_day_charge              100.648
-## international_planyes          86.789
-## voice_mail_planyes             25.974
-## total_eve_charge               23.097
-## total_eve_minutes              23.097
-## number_vmail_messages          19.885
-## total_intl_minutes              6.347
-## total_night_minutes             0.000
-## total_eve_calls                 0.000
-## total_intl_charge               0.000
-## total_day_calls                 0.000
-## total_night_calls               0.000
-## total_night_charge              0.000
-## total_intl_calls                0.000</code></pre>
-<pre class="r"><code>plot(importance)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-58-1.png" /><!-- --></p>
-<pre class="r"><code>library(rpart)
-model.rp = rpart(churn~., data=trainset)
-model.rp$variable.importance</code></pre>
-<pre><code>##             total_day_minutes              total_day_charge number_customer_service_calls            total_intl_minutes             total_intl_charge              total_eve_charge             total_eve_minutes            international_plan 
-##                    111.645286                    110.881583                     58.486651                     48.283228                     47.698379                     47.166646                     47.166646                     42.194508 
-##              total_intl_calls         number_vmail_messages               voice_mail_plan             total_night_calls               total_eve_calls            total_night_charge           total_night_minutes               total_day_calls 
-##                     36.730344                     19.884863                     19.884863                      7.195828                      3.553423                      1.754547                      1.754547                      1.494986</code></pre>
+<div id="boosting-method" class="section level1">
+<h1><span class="header-section-number">2</span> Boosting method</h1>
+<p><img src="images/2.PNG" width="731" /><img src="images/2_1.PNG" width="392" /><img src="images/2_1_2.PNG" width="722" /><img src="images/2_2.PNG" width="705" /></p>
 </div>
-<div id="with-rminer-package" class="section level2">
-<h2><span class="header-section-number">2.2</span> With rminer package</h2>
-<pre class="r"><code>library(rminer)</code></pre>
-<pre><code>## Warning: package &#39;rminer&#39; was built under R version 3.4.3</code></pre>
-<pre><code>## Warning: namespace &#39;dimRed&#39; is not available and has been replaced
-## by .GlobalEnv when processing object &#39;models&#39;
+<div id="boosting-with-adabag-package" class="section level1">
+<h1><span class="header-section-number">3</span> Boosting with adabag package</h1>
+<pre class="r"><code>set.seed(2)
+churn.boost = boosting(churn ~.,data=trainset,mfinal=10,coeflearn=&quot;Freund&quot;, 
+                       boos=FALSE , control=rpart.control(maxdepth=3))
 
-## Warning: namespace &#39;dimRed&#39; is not available and has been replaced
-## by .GlobalEnv when processing object &#39;models&#39;
+churn.boost.pred = predict.boosting(churn.boost,newdata=testset)
 
-## Warning: namespace &#39;dimRed&#39; is not available and has been replaced
-## by .GlobalEnv when processing object &#39;models&#39;</code></pre>
-<pre><code>## 
-## Attaching package: &#39;rminer&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:party&#39;:
-## 
-##     fit</code></pre>
-<pre><code>## The following object is masked from &#39;package:modeltools&#39;:
-## 
-##     fit</code></pre>
-<pre class="r"><code>model=fit(churn~.,trainset,model=&quot;svm&quot;)
-
-VariableImportance=Importance(model,trainset,method=&quot;sensv&quot;)
-
-L=list(runs=1,sen=t(VariableImportance$imp),
-      sresponses=VariableImportance$sresponses)
-mgraph(L,graph=&quot;IMP&quot;,leg=names(trainset),col=&quot;gray&quot;,Grid=10)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-59-1.png" /><!-- --></p>
-<p><br></p>
+churn.boost.pred$confusion</code></pre>
+<pre><code>##                Observed Class
+## Predicted Class yes  no
+##             no   41 858
+##             yes 100  19</code></pre>
+<pre class="r"><code>churn.boost.pred$error</code></pre>
+<pre><code>## [1] 0.0589391</code></pre>
 </div>
-</div>
-<div id="highly-correlated-features" class="section level1">
-<h1><span class="header-section-number">3</span> Highly correlated features</h1>
+<div id="boosting-with-caret-and-mboost-package" class="section level1">
+<h1><span class="header-section-number">4</span> Boosting with caret and mboost package</h1>
 <pre class="r"><code>library(caret)
 
-new_train = trainset[,! names(churnTrain) %in% c(&quot;churn&quot;,
-                            &quot;international_plan&quot;, &quot;voice_mail_plan&quot;)]  
-
-cor_mat = cor(new_train)
-
-highlyCorrelated = findCorrelation(cor_mat, cutoff=0.75)
-
-names(new_train)[highlyCorrelated]</code></pre>
-<pre><code>## [1] &quot;total_intl_minutes&quot;  &quot;total_day_charge&quot;    &quot;total_eve_minutes&quot;   &quot;total_night_minutes&quot;</code></pre>
-<p><br></p>
-</div>
-<div id="feature-selection" class="section level1">
-<h1><span class="header-section-number">4</span> Feature selection</h1>
-<pre class="r"><code>intl_plan = model.matrix(~ trainset.international_plan - 1,
-                        data=data.frame(trainset$international_plan))
-head(intl_plan)</code></pre>
-<pre><code>##   trainset.international_planno trainset.international_planyes
-## 1                             1                              0
-## 2                             1                              0
-## 3                             0                              1
-## 4                             1                              0
-## 5                             1                              0
-## 6                             0                              1</code></pre>
-<pre class="r"><code>colnames(intl_plan) = c(&quot;trainset.international_planno&quot;=&quot;intl_no&quot;, &quot;trainset.international_planyes&quot;= &quot;intl_yes&quot;)
-
-voice_plan = model.matrix(~ trainset.voice_mail_plan - 1,
-                          data=data.frame(trainset$voice_mail_plan))
-colnames(voice_plan) = c(&quot;trainset.voice_mail_planno&quot; =&quot;voice_no&quot;, &quot;trainset.voice_mail_planyes&quot;=&quot;voidce_yes&quot;)
-
-trainset$international_plan = NULL
-trainset$voice_mail_plan = NULL
-trainset = cbind(intl_plan,voice_plan, trainset)
-
-intl_plan = model.matrix(~ testset.international_plan - 1,
-                        data=data.frame(testset$international_plan))
-colnames(intl_plan) = c(&quot;testset.international_planno&quot;=&quot;intl_no&quot;, &quot;testset.international_planyes&quot;= &quot;intl_yes&quot;)
-
-voice_plan = model.matrix(~ testset.voice_mail_plan - 1,
-                          data=data.frame(testset$voice_mail_plan))
-colnames(voice_plan) = c(&quot;testset.voice_mail_planno&quot; =&quot;voice_no&quot;, &quot;testset.voice_mail_planyes&quot;=&quot;voidce_yes&quot;)
-
-testset$international_plan = NULL
-testset$voice_mail_plan = NULL
-testset = cbind(intl_plan,voice_plan, testset)
-
-ldaControl = rfeControl(functions = ldaFuncs, method = &quot;cv&quot;)
-
-ldaProfile = rfe(trainset[, !names(trainset) %in% c(&quot;churn&quot;)],
-            trainset[,c(&quot;churn&quot;)],sizes = c(1:18), rfeControl = ldaControl)</code></pre>
-<pre><code>## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear
-
-## Warning in lda.default(x, grouping, ...): variables are collinear</code></pre>
-<pre class="r"><code>ldaProfile</code></pre>
+# install.packages(&quot;mboost&quot;)
+library(mboost)</code></pre>
+<pre><code>## Warning: package &#39;mboost&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: stabs</code></pre>
+<pre><code>## Warning: package &#39;stabs&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## This is mboost 2.8-1. See &#39;package?mboost&#39; and &#39;news(package  = &quot;mboost&quot;)&#39;
+## for a complete list of changes.</code></pre>
 <pre><code>## 
-## Recursive feature selection
-## 
-## Outer resampling method: Cross-Validated (10 fold) 
-## 
-## Resampling performance over subset size:
-## 
-##  Variables Accuracy  Kappa AccuracySD KappaSD Selected
-##          1   0.8523 0.0000   0.001675 0.00000         
-##          2   0.8523 0.0000   0.001675 0.00000         
-##          3   0.8406 0.1723   0.019843 0.10495         
-##          4   0.8415 0.2170   0.021206 0.08676         
-##          5   0.8484 0.2444   0.018515 0.07894         
-##          6   0.8462 0.2347   0.018762 0.07964         
-##          7   0.8445 0.2261   0.019066 0.07489         
-##          8   0.8441 0.2355   0.016525 0.07581         
-##          9   0.8462 0.2429   0.017758 0.08093         
-##         10   0.8462 0.2387   0.017522 0.07637         
-##         11   0.8475 0.2414   0.017153 0.07881         
-##         12   0.8505 0.2556   0.017902 0.08078         
-##         13   0.8510 0.2590   0.018036 0.07719         
-##         14   0.8527 0.2649   0.018844 0.08683         
-##         15   0.8505 0.2580   0.018826 0.08252         
-##         16   0.8531 0.2661   0.018044 0.08264        *
-##         17   0.8527 0.2652   0.018545 0.08284         
-##         18   0.8527 0.2653   0.018856 0.08409         
-## 
-## The top 5 variables (out of 16):
-##    total_day_charge, total_day_minutes, intl_yes, intl_no, number_customer_service_calls</code></pre>
-<pre class="r"><code>plot(ldaProfile, type = c(&quot;o&quot;, &quot;g&quot;))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-61-1.png" /><!-- --></p>
-<pre class="r"><code>ldaProfile$optVariables</code></pre>
-<pre><code>##  [1] &quot;total_day_charge&quot;              &quot;total_day_minutes&quot;             &quot;intl_yes&quot;                      &quot;intl_no&quot;                       &quot;number_customer_service_calls&quot; &quot;total_eve_charge&quot;              &quot;total_eve_minutes&quot;            
-##  [8] &quot;total_intl_calls&quot;              &quot;voice_no&quot;                      &quot;voidce_yes&quot;                    &quot;number_vmail_messages&quot;         &quot;total_intl_charge&quot;             &quot;total_intl_minutes&quot;            &quot;total_night_minutes&quot;          
-## [15] &quot;total_night_charge&quot;            &quot;total_eve_calls&quot;</code></pre>
-<pre class="r"><code>ldaProfile$fit</code></pre>
-<pre><code>## Call:
-## lda(x, y)
-## 
-## Prior probabilities of groups:
-##       yes        no 
-## 0.1477322 0.8522678 
-## 
-## Group means:
-##     total_day_charge total_day_minutes   intl_yes   intl_no number_customer_service_calls total_eve_charge total_eve_minutes total_intl_calls  voice_no voidce_yes number_vmail_messages total_intl_charge total_intl_minutes total_night_minutes
-## yes         35.00143          205.8877 0.29532164 0.7046784                      2.204678         18.16702          213.7269         4.134503 0.8333333  0.1666667              5.099415          2.899386           10.73684            205.4640
-## no          29.62402          174.2555 0.06487582 0.9351242                      1.441460         16.96789          199.6197         4.514445 0.7045109  0.2954891              8.674607          2.741343           10.15119            201.4184
-##     total_night_charge total_eve_calls
-## yes           9.245994        101.4123
-## no            9.063882         99.9478
-## 
-## Coefficients of linear discriminants:
-##                                         LD1
-## total_day_charge                0.828576451
-## total_day_minutes              -0.149786004
-## intl_yes                       -1.128603132
-## intl_no                         1.128603132
-## number_customer_service_calls  -0.420957247
-## total_eve_charge               -2.102510522
-## total_eve_minutes               0.173913788
-## total_intl_calls                0.066649995
-## voice_no                       -0.327916601
-## voidce_yes                      0.327916601
-## number_vmail_messages          -0.003474032
-## total_intl_charge               2.174043784
-## total_intl_minutes             -0.655507449
-## total_night_minutes             0.621126263
-## total_night_charge            -13.849592057
-## total_eve_calls                -0.002042648</code></pre>
-<p><br></p>
-</div>
-<div id="measuring-performance-of-a-regression-model" class="section level1">
-<h1><span class="header-section-number">5</span> Measuring performance of a regression model</h1>
-<pre class="r"><code>library(car)</code></pre>
-<pre><code>## Warning: package &#39;car&#39; was built under R version 3.4.3</code></pre>
-<pre class="r"><code>data(Quartet)
-
-plot(Quartet$x, Quartet$y3)
-lmfit = lm(Quartet$y3~Quartet$x)
-abline(lmfit, col=&quot;red&quot;)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-62-1.png" /><!-- --></p>
-<pre class="r"><code>predicted= predict(lmfit, newdata=Quartet[c(&quot;x&quot;)])
-
-actual = Quartet$y3
-rmse = (mean((predicted - actual)^2))^0.5
-rmse</code></pre>
-<pre><code>## [1] 1.118286</code></pre>
-<pre class="r"><code>mu = mean(actual)
-rse = mean((predicted - actual)^2) / mean((mu - actual)^2)
-rse</code></pre>
-<pre><code>## [1] 0.333676</code></pre>
-<pre class="r"><code>rsquare = 1 - rse
-rsquare</code></pre>
-<pre><code>## [1] 0.666324</code></pre>
-<pre class="r"><code>library(MASS)
-plot(Quartet$x, Quartet$y3)
-rlmfit = rlm(Quartet$y3~Quartet$x)
-abline(rlmfit, col=&quot;red&quot;)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-62-2.png" /><!-- --></p>
-<pre class="r"><code>predicted = predict(rlmfit, newdata=Quartet[c(&quot;x&quot;)])
-
-actual = Quartet$y3
-rmse = (mean((predicted - actual)^2))^0.5
-rmse</code></pre>
-<pre><code>## [1] 1.279045</code></pre>
-<pre class="r"><code>mu = mean(actual)
-rse =mean((predicted - actual)^2) / mean((mu - actual)^2)
-rse</code></pre>
-<pre><code>## [1] 0.4365067</code></pre>
-<pre class="r"><code>rsquare = 1 - rse
-rsquare</code></pre>
-<pre><code>## [1] 0.5634933</code></pre>
-<pre class="r"><code>tune(lm, y3~x, data = Quartet)</code></pre>
-<pre><code>## 
-## Error estimation of &#39;lm&#39; using 10-fold cross validation: 2.308766</code></pre>
-<p><br></p>
-</div>
-<div id="measuring-performance-with-a-confusion-matrix" class="section level1">
-<h1><span class="header-section-number">6</span> Measuring performance with a confusion matrix</h1>
-<pre class="r"><code>svm.model= train(churn ~ .,
-                 data = trainset,
-                 method = &quot;svmRadial&quot;)</code></pre>
-<pre><code>## Loading required package: kernlab</code></pre>
-<pre><code>## Warning: package &#39;kernlab&#39; was built under R version 3.4.1</code></pre>
-<pre><code>## 
-## Attaching package: &#39;kernlab&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:modeltools&#39;:
-## 
-##     prior</code></pre>
+## Attaching package: &#39;mboost&#39;</code></pre>
 <pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
 ## 
-##     alpha</code></pre>
-<pre class="r"><code>svm.pred = predict(svm.model, testset[,! names(testset) %in%
-                                        c(&quot;churn&quot;)])
-
-table(svm.pred, testset[,c(&quot;churn&quot;)])</code></pre>
-<pre><code>##         
-## svm.pred yes  no
-##      yes  77  13
-##      no   64 864</code></pre>
-<pre class="r"><code>confusionMatrix(svm.pred, testset[,c(&quot;churn&quot;)])</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction yes  no
-##        yes  77  13
-##        no   64 864
-##                                           
-##                Accuracy : 0.9244          
-##                  95% CI : (0.9064, 0.9398)
-##     No Information Rate : 0.8615          
-##     P-Value [Acc &gt; NIR] : 2.639e-10       
-##                                           
-##                   Kappa : 0.6263          
-##  Mcnemar&#39;s Test P-Value : 1.212e-08       
-##                                           
-##             Sensitivity : 0.54610         
-##             Specificity : 0.98518         
-##          Pos Pred Value : 0.85556         
-##          Neg Pred Value : 0.93103         
-##              Prevalence : 0.13851         
-##          Detection Rate : 0.07564         
-##    Detection Prevalence : 0.08841         
-##       Balanced Accuracy : 0.76564         
-##                                           
-##        &#39;Positive&#39; Class : yes             
-## </code></pre>
-<p><br></p>
-</div>
-<div id="measuring-performance-using-rocr" class="section level1">
-<h1><span class="header-section-number">7</span> Measuring performance using ROCR</h1>
-<pre class="r"><code>library(ROCR)</code></pre>
-<pre><code>## Loading required package: gplots</code></pre>
+##     %+%</code></pre>
+<pre class="r"><code># install.packages(&quot;pROC&quot;)
+library(pROC)</code></pre>
+<pre><code>## Warning: package &#39;pROC&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Type &#39;citation(&quot;pROC&quot;)&#39; for a citation.</code></pre>
 <pre><code>## 
-## Attaching package: &#39;gplots&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:stats&#39;:
+## Attaching package: &#39;pROC&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:stats&#39;:
 ## 
-##     lowess</code></pre>
-<pre class="r"><code>svmfit=svm(churn~ ., data=trainset, prob=TRUE)
+##     cov, smooth, var</code></pre>
+<pre class="r"><code>set.seed(2)
+ctrl = trainControl(method = &quot;repeatedcv&quot;, repeats = 1,
+                      classProbs = TRUE, summaryFunction = twoClassSummary)
+ada.train = train(churn ~ ., data = trainset, method = &quot;ada&quot;,
+                    metric = &quot;ROC&quot;, trControl = ctrl)</code></pre>
+<pre><code>## Loading required package: ada</code></pre>
+<pre><code>## Warning: package &#39;ada&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: plyr</code></pre>
+<pre class="r"><code>ada.train$result</code></pre>
+<pre><code>##    nu maxdepth iter       ROC      Sens        Spec      ROCSD     SensSD      SpecSD
+## 1 0.1        1   50 0.8544056 0.9063866 0.014184997 0.03026171 0.04957303 0.006216451
+## 4 0.1        2   50 0.8848011 0.7108403 0.006581039 0.04013608 0.11590104 0.005866431
+## 7 0.1        3   50 0.9051436 0.4095798 0.006081116 0.03557342 0.11815895 0.003999819
+## 2 0.1        1  100 0.8553078 0.8889076 0.016212890 0.03467343 0.06891872 0.006658101
+## 5 0.1        2  100 0.8908190 0.6494958 0.009624160 0.04171451 0.12550486 0.004422596
+## 8 0.1        3  100 0.9072497 0.3831092 0.007093780 0.03421817 0.08040967 0.003541178
+## 3 0.1        1  150 0.8592966 0.8743697 0.018243347 0.03495324 0.07311649 0.006405739
+## 6 0.1        2  150 0.8921171 0.6025210 0.010131775 0.04028120 0.11524560 0.003358529
+## 9 0.1        3  150 0.9077623 0.3773950 0.008109009 0.03240733 0.08103661 0.003545259</code></pre>
+<pre class="r"><code>plot(ada.train)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" /><!-- --></p>
+<pre class="r"><code>ada.predict = predict(ada.train, testset, &quot;prob&quot;)
+ada.predict.result = ifelse(ada.predict[1] &gt; 0.5, &quot;yes&quot;, &quot;no&quot;)
 
-pred=predict(svmfit,testset[, !names(testset) %in% c(&quot;churn&quot;)],
-             probability=TRUE)
-
-pred.prob = attr(pred, &quot;probabilities&quot;)
-pred.to.roc = pred.prob[, 2]
-
-pred.rocr = prediction(pred.to.roc, testset$churn)
-
-perf.rocr = performance(pred.rocr, measure = &quot;auc&quot;, x.measure =&quot;cutoff&quot;)
-perf.tpr.rocr = performance(pred.rocr, &quot;tpr&quot;,&quot;fpr&quot;)
-
-plot(perf.tpr.rocr, colorize=T,main=paste(&quot;AUC:&quot;,(perf.rocr@y.values)))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-64-1.png" /><!-- --></p>
-<p><br></p>
+table(testset$churn, ada.predict.result)</code></pre>
+<pre><code>##      ada.predict.result
+##        no yes
+##   yes  40 101
+##   no  871   6</code></pre>
+<div id="cross-validation-with-boosting-method" class="section level2">
+<h2><span class="header-section-number">4.1</span> Cross-Validation with Boosting Method</h2>
+<pre class="r"><code>churn.boostcv = boosting.cv(churn ~ ., v=10, data=trainset,
+                            mfinal=5,control=rpart.control(cp=0.01))</code></pre>
+<pre><code>## i:  1 Fri Feb 23 20:02:06 2018 
+## i:  2 Fri Feb 23 20:02:08 2018 
+## i:  3 Fri Feb 23 20:02:09 2018 
+## i:  4 Fri Feb 23 20:02:10 2018 
+## i:  5 Fri Feb 23 20:02:11 2018 
+## i:  6 Fri Feb 23 20:02:12 2018 
+## i:  7 Fri Feb 23 20:02:13 2018 
+## i:  8 Fri Feb 23 20:02:15 2018 
+## i:  9 Fri Feb 23 20:02:16 2018 
+## i:  10 Fri Feb 23 20:02:17 2018</code></pre>
+<pre class="r"><code>churn.boostcv$confusion</code></pre>
+<pre><code>##                Observed Class
+## Predicted Class  yes   no
+##             no   114 1936
+##             yes  228   37</code></pre>
+<pre class="r"><code>churn.boostcv$error</code></pre>
+<pre><code>## [1] 0.06522678</code></pre>
 </div>
-<div id="comparing-roc-curve" class="section level1">
-<h1><span class="header-section-number">8</span> Comparing ROC Curve</h1>
-<pre class="r"><code>#install.packages(&quot;pROC&quot;)
-library(&quot;pROC&quot;)
-
-library(caret)
-control = trainControl(method = &quot;repeatedcv&quot;,
-                        number = 10,
-                        repeats = 3,
-                        classProbs = TRUE,
-                        summaryFunction = twoClassSummary)
-
-glm.model= train(churn ~ .,
-                  data = trainset,
-                  method = &quot;glm&quot;,
-                  metric = &quot;ROC&quot;,
-                  trControl = control)</code></pre>
-<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading
-
-## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading</code></pre>
-<pre class="r"><code>rpart.model= train(churn ~ .,
-                   data = trainset,
-                   method = &quot;rpart&quot;,
-                   metric = &quot;ROC&quot;,
-                   trControl = control)
-                 
-glm.probs = predict(glm.model, testset[,! names(testset) %in%
-                                         c(&quot;churn&quot;)], type = &quot;prob&quot;)</code></pre>
-<pre><code>## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = ifelse(type == : prediction from a rank-deficient fit may be misleading</code></pre>
-<pre class="r"><code>rpart.probs = predict(rpart.model, testset[,! names(testset)
-                                             %in% c(&quot;churn&quot;)], type = &quot;prob&quot;) 
-
-glm.ROC = roc(response = testset[,c(&quot;churn&quot;)],
-               predictor =glm.probs$yes,
-               levels = levels(testset[,c(&quot;churn&quot;)]))
-plot(glm.ROC, type=&quot;S&quot;, col=&quot;red&quot;)
-
-
-rpart.ROC = roc(response = testset[,c(&quot;churn&quot;)],
-                 predictor =rpart.probs$yes,
-                 levels = levels(testset[,c(&quot;churn&quot;)]))
-plot(rpart.ROC, add=TRUE, col=&quot;blue&quot;)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-65-1.png" /><!-- --></p>
-<p><br></p>
+<div id="classifying-data-with-gradient-boosting" class="section level2">
+<h2><span class="header-section-number">4.2</span> Classifying data with gradient boosting</h2>
+<pre class="r"><code># install.packages(&quot;gbm&quot;)
+library(gbm)</code></pre>
+<pre><code>## Warning: package &#39;gbm&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: survival</code></pre>
+<pre><code>## 
+## Attaching package: &#39;survival&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:caret&#39;:
+## 
+##     cluster</code></pre>
+<pre><code>## Loading required package: splines</code></pre>
+<pre><code>## Loaded gbm 2.1.3</code></pre>
+<pre class="r"><code>trainset$churn = ifelse(trainset$churn == &quot;yes&quot;, 1, 0)
+
+set.seed(2)
+churn.gbm = gbm(formula = churn ~ .,distribution =&quot;bernoulli&quot;,
+                data = trainset,n.trees = 1000,interaction.depth =7,
+                shrinkage = 0.01, cv.folds=3)
+
+summary(churn.gbm)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-10-1.png" /><!-- --></p>
+<pre><code>##                                                         var    rel.inf
+## total_day_minutes                         total_day_minutes 28.1217147
+## total_eve_minutes                         total_eve_minutes 16.8097151
+## number_customer_service_calls number_customer_service_calls 12.7894464
+## total_intl_minutes                       total_intl_minutes  9.4515822
+## total_intl_calls                           total_intl_calls  8.1379826
+## international_plan                       international_plan  8.0703900
+## total_night_minutes                     total_night_minutes  4.0805153
+## number_vmail_messages                 number_vmail_messages  3.9173515
+## voice_mail_plan                             voice_mail_plan  2.5501480
+## total_night_calls                         total_night_calls  2.1357970
+## total_day_calls                             total_day_calls  1.7367888
+## total_eve_calls                             total_eve_calls  1.4398047
+## total_eve_charge                           total_eve_charge  0.5457486
+## total_night_charge                       total_night_charge  0.2130152
+## total_day_charge                           total_day_charge  0.0000000
+## total_intl_charge                         total_intl_charge  0.0000000</code></pre>
+<pre class="r"><code>churn.iter = gbm.perf(churn.gbm,method=&quot;cv&quot;)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-10-2.png" /><!-- --></p>
+<pre class="r"><code>churn.predict = predict(churn.gbm, testset, n.trees = churn.iter)
+str(churn.predict)</code></pre>
+<pre><code>##  num [1:1018] -3.31 -2.91 -3.16 -3.47 -3.48 ...</code></pre>
+<pre class="r"><code>churn.roc = roc(testset$churn, churn.predict)
+plot(churn.roc)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-10-3.png" /><!-- --></p>
+<pre class="r"><code>coords(churn.roc, &quot;best&quot;)</code></pre>
+<pre><code>##   threshold specificity sensitivity 
+##  -0.9495258   0.8723404   0.9703535</code></pre>
+<pre class="r"><code>churn.predict.class = ifelse(churn.predict &gt; coords(churn.roc,
+                             &quot;best&quot;)[&quot;threshold&quot;], &quot;yes&quot;, &quot;no&quot;)
+table( testset$churn,churn.predict.class)</code></pre>
+<pre><code>##      churn.predict.class
+##        no yes
+##   yes  18 123
+##   no  851  26</code></pre>
 </div>
-<div id="measuring-performance-differences-between-models" class="section level1">
-<h1><span class="header-section-number">9</span> Measuring performance differences between models</h1>
-<pre class="r"><code>cv.values = resamples(list(glm = glm.model, rpart
-                           = rpart.model))
-
-summary(cv.values)</code></pre>
+</div>
+<div id="random-forest" class="section level1">
+<h1><span class="header-section-number">5</span> Random Forest</h1>
+<p><img src="images/3.PNG" width="666" /><img src="images/3_1.PNG" width="679" /></p>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## Warning: package &#39;randomForest&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## randomForest 4.6-12</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;randomForest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     margin</code></pre>
+<pre class="r"><code>churn.rf = randomForest(churn ~ ., data = trainset, importance =T)</code></pre>
+<pre><code>## Warning in randomForest.default(m, y, ...): The response has five or fewer unique values. Are you sure you want to do regression?</code></pre>
+<pre class="r"><code>churn.rf</code></pre>
 <pre><code>## 
 ## Call:
-## summary.resamples(object = cv.values)
+##  randomForest(formula = churn ~ ., data = trainset, importance = T) 
+##                Type of random forest: regression
+##                      Number of trees: 500
+## No. of variables tried at each split: 5
 ## 
-## Models: glm, rpart 
-## Number of resamples: 30 
+##           Mean of squared residuals: 0.04640701
+##                     % Var explained: 63.14</code></pre>
+<pre class="r"><code>churn.prediction = predict(churn.rf, testset)
+
+head(table(churn.prediction, testset$churn))</code></pre>
+<pre><code>##                        
+## churn.prediction        yes no
+##   -5.57887069874141e-16   0  1
+##   -4.94548846319276e-16   0  1
+##   -4.64184246595778e-16   0  1
+##   -4.47919479285019e-16   0  1
+##   -4.25326440733897e-16   0  1
+##   -4.22273327416178e-16   0  1</code></pre>
+<pre class="r"><code>plot(churn.rf)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" /><!-- --></p>
+<pre class="r"><code>importance(churn.rf)</code></pre>
+<pre><code>##                                  %IncMSE IncNodePurity
+## international_plan            80.7149576     25.295787
+## voice_mail_plan               23.3208545      6.544545
+## number_vmail_messages         20.6152568      8.757943
+## total_day_minutes             36.4861068     37.991652
+## total_day_calls               -0.5551472      8.545268
+## total_day_charge              35.7751300     37.061961
+## total_eve_minutes             23.8754395     20.937944
+## total_eve_calls               -0.9937240      7.076304
+## total_eve_charge              23.4729642     21.865746
+## total_night_minutes           15.8139138      9.810506
+## total_night_calls              0.8897503      8.464765
+## total_night_charge            15.6039881      9.488021
+## total_intl_minutes            22.9955736     12.053245
+## total_intl_calls              45.6644855     17.130940
+## total_intl_charge             23.8023755     12.232521
+## number_customer_service_calls 99.1497151     33.318553</code></pre>
+<pre class="r"><code>varImpPlot(churn.rf)</code></pre>
+<p><img src="index_files/figure-html/unnamed-chunk-12-2.png" /><!-- --></p>
+<pre class="r"><code>library(party)</code></pre>
+<pre><code>## Warning: package &#39;party&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Loading required package: mvtnorm</code></pre>
+<pre><code>## Warning: package &#39;mvtnorm&#39; was built under R version 3.4.1</code></pre>
+<pre><code>## Loading required package: modeltools</code></pre>
+<pre><code>## Warning: package &#39;modeltools&#39; was built under R version 3.4.1</code></pre>
+<pre><code>## Loading required package: stats4</code></pre>
+<pre><code>## 
+## Attaching package: &#39;modeltools&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:plyr&#39;:
 ## 
-## ROC 
-##            Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA&#39;s
-## glm   0.7414068 0.7868084 0.8122872 0.8118772 0.8402711 0.9106782    0
-## rpart 0.6419144 0.6986086 0.7384294 0.7426766 0.7856004 0.8499703    0
+##     empty</code></pre>
+<pre><code>## The following object is masked from &#39;package:stabs&#39;:
 ## 
-## Sens 
-##            Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA&#39;s
-## glm   0.1142857 0.1764706 0.2172269 0.2222409 0.2647059 0.3823529    0
-## rpart 0.2647059 0.3823529 0.4285714 0.4456863 0.5220588 0.6764706    0
+##     parameters</code></pre>
+<pre><code>## Loading required package: strucchange</code></pre>
+<pre><code>## Warning: package &#39;strucchange&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## Warning: package &#39;zoo&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
-## Spec 
-##            Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA&#39;s
-## glm   0.9543147 0.9657360 0.9695431 0.9716138 0.9797723 0.9898477    0
-## rpart 0.9593909 0.9709275 0.9796954 0.9787084 0.9885979 1.0000000    0</code></pre>
-<pre class="r"><code>dotplot(cv.values, metric = &quot;ROC&quot;)</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-66-1.png" /><!-- --></p>
-<pre class="r"><code>bwplot(cv.values, layout = c(3, 1))</code></pre>
-<p><img src="index_files/figure-html/unnamed-chunk-66-2.png" /><!-- --></p>
+##     as.Date, as.Date.numeric</code></pre>
+<pre><code>## Loading required package: sandwich</code></pre>
+<pre><code>## Warning: package &#39;sandwich&#39; was built under R version 3.4.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;party&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:mboost&#39;:
+## 
+##     varimp</code></pre>
+<pre class="r"><code>churn.cforest = cforest(churn ~ ., data = trainset,
+                        controls=cforest_unbiased(ntree=1000, mtry=5))
+churn.cforest</code></pre>
+<pre><code>## 
+##   Random Forest using Conditional Inference Trees
+## 
+## Number of trees:  1000 
+## 
+## Response:  churn 
+## Inputs:  international_plan, voice_mail_plan, number_vmail_messages, total_day_minutes, total_day_calls, total_day_charge, total_eve_minutes, total_eve_calls, total_eve_charge, total_night_minutes, total_night_calls, total_night_charge, total_intl_minutes, total_intl_calls, total_intl_charge, number_customer_service_calls 
+## Number of observations:  2315</code></pre>
+<pre class="r"><code>churn.cforest.prediction = predict(churn.cforest, testset,OOB=TRUE,
+                                   type = &quot;response&quot;)
+
+head(table(churn.cforest.prediction, testset$churn))</code></pre>
+<pre><code>##                         
+## churn.cforest.prediction yes no
+##     0.000323049588111775   0  1
+##     0.00045047725089883    0  1
+##     0.000506185889323944   0  1
+##     0.000531340805313408   0  1
+##     0.000616912207517516   0  1
+##     0.000645902109946892   0  1</code></pre>
 </div>
 
 
